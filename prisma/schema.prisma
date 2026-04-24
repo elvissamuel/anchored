@@ -1,0 +1,442 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  users         User[]
+  groups        Group[]
+  tasks         Task[]
+  quizzes       Quiz[]
+  notifications Notification[]
+  inviteLinks   OrgInviteLink[]
+  discipleships Discipleship[]
+  gameQuestions GameQuestion[]
+  gameSessions  GameSession[]
+
+  @@index([slug])
+}
+
+enum OrgRole {
+  ADMIN
+  GROUP_LEADER
+  MEMBER
+}
+
+// User model (single organization per user)
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String
+  firstName String
+  lastName  String
+  organizationId String
+  orgRole   OrgRole    @default(MEMBER)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relations
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  taskCompletions TaskCompletion[]
+  quizAttempts    QuizAttempt[]
+  notifications   Notification[]
+  groups          GroupMember[]
+  mentorLinks     Discipleship[] @relation("MentorDiscipleships")
+  discipleLinks   Discipleship[] @relation("DiscipleDiscipleships")
+  createdInviteLinks OrgInviteLink[]
+  createdTasks    Task[] @relation("CreatedTasks")
+  assignedTasks   Task[] @relation("AssignedTasks")
+  createdQuizzes   Quiz[] @relation("CreatedQuizzes")
+  gameQuestionsCreated      GameQuestion[]           @relation("GameQuestionCreatedBy")
+  gameSessionsCreated       GameSession[]            @relation("GameSessionCreatedBy")
+  gameSessionParticipants   GameSessionParticipant[]
+  gameSessionAnswers        GameSessionAnswer[]
+
+  @@index([organizationId])
+  @@index([orgRole])
+}
+
+model OrgInviteLink {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  organizationId String
+  createdById String
+  expiresAt DateTime?
+  maxUses   Int?
+  usedCount Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User         @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([token])
+}
+
+model Group {
+  id        String   @id @default(cuid())
+  organizationId String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members      GroupMember[]
+  tasks        Task[]
+
+  @@index([organizationId])
+  @@unique([organizationId, name])
+}
+
+enum GroupRole {
+  LEADER
+  MEMBER
+}
+
+enum TaskType {
+  DAILY
+  ASSIGNMENT
+  POINTS
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  groupId   String
+  userId    String
+  role      GroupRole @default(MEMBER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+
+  @@index([groupId])
+  @@index([userId])
+}
+
+// Task model - daily tasks for users
+model Task {
+  id          String   @id @default(cuid())
+  organizationId String
+  groupId     String?
+  assignedToUserId String?
+  createdById String
+  title       String
+  description String?
+  content     String? // Detailed task content/instructions
+  resourceUrl String? // Optional link (e.g. YouTube); embedded on user task view when recognized
+  type        TaskType @default(DAILY)
+  points      Int      @default(0)
+  dueDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  group        Group?       @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  assignedToUser User?      @relation("AssignedTasks", fields: [assignedToUserId], references: [id], onDelete: SetNull)
+  createdBy    User         @relation("CreatedTasks", fields: [createdById], references: [id], onDelete: Cascade)
+  completions TaskCompletion[]
+
+  @@index([organizationId])
+  @@index([groupId])
+  @@index([dueDate])
+}
+
+// Task completion tracking
+model TaskCompletion {
+  id        String   @id @default(cuid())
+  userId    String
+  taskId    String
+  completed Boolean  @default(false)
+  submittedAt DateTime?
+  response  String?
+  /** Admin feedback when requesting a revision or optional note on approval */
+  adminFeedback       String?
+  /** Set when admin asks member to revise; cleared on resubmit. submittedAt cleared so it leaves the pending queue. */
+  revisionRequestedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId]) // Ensure one completion record per user per task
+  @@index([userId])
+  @@index([taskId])
+}
+
+// Quiz model
+model Quiz {
+  id          String   @id @default(cuid())
+  organizationId String
+  createdById String
+  title       String
+  description String?
+  dueDate     DateTime?
+  passingScore Int     @default(70) // Percentage needed to pass
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User         @relation("CreatedQuizzes", fields: [createdById], references: [id], onDelete: Cascade)
+  questions   QuizQuestion[]
+  attempts    QuizAttempt[]
+
+  @@index([organizationId])
+  @@index([dueDate])
+}
+
+// Quiz questions model
+model QuizQuestion {
+  id        String   @id @default(cuid())
+  quizId    String
+  question  String
+  type      QuestionType @default(MULTIPLE_CHOICE)
+  options   Json // Stored as JSON array: [{text: "...", isCorrect: boolean}]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  answers QuizAnswer[]
+
+  @@index([quizId])
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  SHORT_ANSWER
+}
+
+// Quiz attempts by users
+model QuizAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  quizId      String
+  score       Float // Calculated as percentage
+  passed      Boolean  @default(false)
+  startedAt   DateTime @default(now())
+  submittedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz     Quiz        @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  answers  QuizAnswer[]
+
+  @@index([userId])
+  @@index([quizId])
+}
+
+// Quiz answers - tracks user's answers to specific questions
+model QuizAnswer {
+  id       String @id @default(cuid())
+  attemptId String
+  questionId String
+  answer   String // User's answer text or selected option
+  isCorrect Boolean?
+
+  // Relations
+  attempt  QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([attemptId])
+  @@index([questionId])
+}
+
+// Notification/Message model - handles both direct messages and announcements
+model Notification {
+  id              String   @id @default(cuid())
+  userId          String
+  organizationId  String
+  title           String
+  message         String
+  type            NotificationType @default(MESSAGE)
+  isAnnouncement  Boolean  @default(false)
+  read            Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([read])
+}
+
+enum DiscipleshipStatus {
+  ACTIVE
+  ENDED
+}
+
+model Discipleship {
+  id        String   @id @default(cuid())
+  organizationId String
+  mentorId  String
+  discipleId String
+  status    DiscipleshipStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  mentor   User @relation("MentorDiscipleships", fields: [mentorId], references: [id], onDelete: Cascade)
+  disciple User @relation("DiscipleDiscipleships", fields: [discipleId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, mentorId, discipleId])
+  @@index([organizationId])
+  @@index([mentorId])
+  @@index([discipleId])
+}
+
+enum NotificationType {
+  MESSAGE
+  ANNOUNCEMENT
+  REMINDER
+  UPDATE
+}
+
+// --- Live quiz games (question bank + timed sessions) ---
+
+enum GameQuestionDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum GameSessionStatus {
+  DRAFT
+  LOBBY
+  LIVE
+  FINISHED
+}
+
+model GameQuestion {
+  id               String                 @id @default(cuid())
+  organizationId   String
+  createdById      String
+  prompt           String
+  difficulty       GameQuestionDifficulty @default(MEDIUM)
+  timeLimitSeconds Int                    @default(30)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  organization     Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy        User                   @relation("GameQuestionCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  options          GameBankOption[]
+  sessionQuestions GameSessionQuestion[]
+  sessionAnswers   GameSessionAnswer[]
+
+  @@index([organizationId])
+}
+
+model GameBankOption {
+  id             String       @id @default(cuid())
+  gameQuestionId String
+  text           String
+  isCorrect      Boolean      @default(false)
+  sortOrder      Int          @default(0)
+
+  gameQuestion GameQuestion @relation(fields: [gameQuestionId], references: [id], onDelete: Cascade)
+  answers      GameSessionAnswer[]
+
+  @@index([gameQuestionId])
+}
+
+model GameSession {
+  id                   String            @id @default(cuid())
+  organizationId       String
+  createdById          String
+  title                String
+  status               GameSessionStatus @default(DRAFT)
+  currentQuestionIndex Int               @default(0)
+  questionStartedAt    DateTime?
+  pendingAdvanceAt     DateTime? // brief pause after everyone answers so results are visible
+  finishedAt           DateTime?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  organization Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User                     @relation("GameSessionCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  participants GameSessionParticipant[]
+  questions    GameSessionQuestion[]
+  answers      GameSessionAnswer[]
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+model GameSessionQuestion {
+  id             String @id @default(cuid())
+  sessionId      String
+  gameQuestionId String
+  sortOrder      Int
+
+  session      GameSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  gameQuestion GameQuestion @relation(fields: [gameQuestionId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, sortOrder])
+  @@index([sessionId])
+}
+
+model GameSessionParticipant {
+  id         String    @id @default(cuid())
+  sessionId  String
+  userId     String
+  totalScore Int       @default(0)
+  joinedAt   DateTime?
+
+  session GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, userId])
+  @@index([sessionId])
+}
+
+model GameSessionAnswer {
+  id             String   @id @default(cuid())
+  sessionId      String
+  userId         String
+  gameQuestionId String
+  optionId       String
+  answeredAt     DateTime @default(now())
+  reactionTimeMs Int
+  isCorrect      Boolean
+  pointsAwarded  Int      @default(0)
+
+  session      GameSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameQuestion GameQuestion @relation(fields: [gameQuestionId], references: [id], onDelete: Cascade)
+  option       GameBankOption @relation(fields: [optionId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, userId, gameQuestionId])
+  @@index([sessionId])
+  @@index([userId])
+}
