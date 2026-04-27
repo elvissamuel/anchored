@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { ThemeToggle } from '@/components/theme-toggle';
 import {
   BarChart3Icon,
   CrownIcon,
@@ -35,13 +36,13 @@ export default function AdminLayout({
   const isActivePrefix = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   const Nav = ({ onNavigate }: { onNavigate?: () => void }) => (
-    <nav className="space-y-1 px-3">
+    <nav className="space-y-1 flex flex-col px-3">
       <Link href="/admin" onClick={onNavigate}>
         <Button
           variant={isActiveExact('/admin') ? 'secondary' : 'ghost'}
           className={
             isActiveExact('/admin')
-              ? 'w-full justify-start text-left bg-gray-100'
+              ? 'w-full justify-start text-left !text-primary bg-secondary/30 hover:bg-secondary/50 dark:bg-secondary/60 dark:hover:bg-secondary/80 [&_svg]:!text-primary'
               : 'w-full justify-start text-left'
           }
         >
@@ -55,7 +56,7 @@ export default function AdminLayout({
           variant={isActivePrefix('/admin/organization') ? 'secondary' : 'ghost'}
           className={
             isActivePrefix('/admin/organization')
-              ? 'w-full justify-start text-left bg-gray-100'
+              ? 'w-full justify-start text-left !text-primary bg-secondary/30 hover:bg-secondary/50 dark:bg-secondary/60 dark:hover:bg-secondary/80 [&_svg]:!text-primary'
               : 'w-full justify-start text-left'
           }
         >
@@ -69,7 +70,7 @@ export default function AdminLayout({
           variant={isActivePrefix('/admin/users') ? 'secondary' : 'ghost'}
           className={
             isActivePrefix('/admin/users')
-              ? 'w-full justify-start text-left bg-gray-100'
+              ? 'w-full justify-start text-left !text-primary bg-secondary/30 hover:bg-secondary/50 dark:bg-secondary/60 dark:hover:bg-secondary/80 [&_svg]:!text-primary'
               : 'w-full justify-start text-left'
           }
         >
@@ -83,7 +84,7 @@ export default function AdminLayout({
           variant={isActivePrefix('/admin/tasks') ? 'secondary' : 'ghost'}
           className={
             isActivePrefix('/admin/tasks')
-              ? 'w-full justify-start text-left bg-gray-100'
+              ? 'w-full justify-start text-left !text-primary bg-secondary/30 hover:bg-secondary/50 dark:bg-secondary/60 dark:hover:bg-secondary/80 [&_svg]:!text-primary'
               : 'w-full justify-start text-left'
           }
         >
@@ -97,7 +98,7 @@ export default function AdminLayout({
           variant={isActivePrefix('/admin/groups') ? 'secondary' : 'ghost'}
           className={
             isActivePrefix('/admin/groups')
-              ? 'w-full justify-start text-left bg-gray-100'
+              ? 'w-full justify-start text-left !text-primary bg-secondary/30 hover:bg-secondary/50 dark:bg-secondary/60 dark:hover:bg-secondary/80 [&_svg]:!text-primary'
               : 'w-full justify-start text-left'
           }
         >
@@ -111,7 +112,7 @@ export default function AdminLayout({
           variant={isActivePrefix('/admin/quizzes') ? 'secondary' : 'ghost'}
           className={
             isActivePrefix('/admin/quizzes')
-              ? 'w-full justify-start text-left bg-gray-100'
+              ? 'w-full justify-start text-left !text-primary bg-secondary/30 hover:bg-secondary/50 dark:bg-secondary/60 dark:hover:bg-secondary/80 [&_svg]:!text-primary'
               : 'w-full justify-start text-left'
           }
         >
@@ -125,7 +126,7 @@ export default function AdminLayout({
           variant={isActivePrefix('/admin/games') ? 'secondary' : 'ghost'}
           className={
             isActivePrefix('/admin/games')
-              ? 'w-full justify-start text-left bg-gray-100'
+              ? 'w-full justify-start text-left !text-primary bg-secondary/30 hover:bg-secondary/50 dark:bg-secondary/60 dark:hover:bg-secondary/80 [&_svg]:!text-primary'
               : 'w-full justify-start text-left'
           }
         >
@@ -139,7 +140,7 @@ export default function AdminLayout({
           variant={isActivePrefix('/admin/leaderboard') ? 'secondary' : 'ghost'}
           className={
             isActivePrefix('/admin/leaderboard')
-              ? 'w-full justify-start text-left bg-gray-100'
+              ? 'w-full justify-start text-left !text-primary bg-secondary/30 hover:bg-secondary/50 dark:bg-secondary/60 dark:hover:bg-secondary/80 [&_svg]:!text-primary'
               : 'w-full justify-start text-left'
           }
         >
@@ -153,7 +154,7 @@ export default function AdminLayout({
           variant={isActivePrefix('/admin/messages') ? 'secondary' : 'ghost'}
           className={
             isActivePrefix('/admin/messages')
-              ? 'w-full justify-start text-left bg-gray-100'
+              ? 'w-full justify-start text-left !text-primary bg-secondary/30 hover:bg-secondary/50 dark:bg-secondary/60 dark:hover:bg-secondary/80 [&_svg]:!text-primary'
               : 'w-full justify-start text-left'
           }
         >
@@ -177,35 +178,38 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-background">
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="p-0">
           <div className="p-6 border-b">
-            <h1 className="text-xl font-bold text-blue-600">DiscipleHub</h1>
+            <h1 className="text-xl font-bold text-primary">DiscipleHub</h1>
             <p className="text-xs text-gray-500 mt-1">Admin Dashboard</p>
           </div>
           <div className="py-3">
             <Nav onNavigate={() => setMobileOpen(false)} />
           </div>
           <div className="mt-auto p-4 border-t">
-            <Button
-              onClick={handleLogout}
-              disabled={isLoading}
-              variant="outline"
-              className="w-full"
-            >
-              {isLoading ? 'Logging out...' : 'Logout'}
-            </Button>
+            <div className="flex gap-2">
+              <ThemeToggle />
+              <Button
+                onClick={handleLogout}
+                disabled={isLoading}
+                variant="outline"
+                className="w-full"
+              >
+                {isLoading ? 'Logging out...' : 'Logout'}
+              </Button>
+            </div>
           </div>
         </SheetContent>
 
         <aside
-          className={`${isCollapsed ? 'w-20' : 'w-64'} hidden md:flex flex-col bg-white shadow-sm border-r transition-[width] duration-200`}
+          className={`${isCollapsed ? 'w-20' : 'w-64'} hidden md:flex flex-col bg-card shadow-sm border-r transition-[width] duration-200`}
         >
           <div className="p-6">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <h1 className="text-2xl font-bold text-blue-600">{isCollapsed ? 'D' : 'DiscipleHub'}</h1>
+                <h1 className="text-2xl font-bold text-primary">{isCollapsed ? 'D' : 'DiscipleHub'}</h1>
                 {!isCollapsed && <p className="text-xs text-gray-500 mt-1">Admin Dashboard</p>}
               </div>
               <Button
@@ -229,19 +233,22 @@ export default function AdminLayout({
           </div>
 
           <div className="mt-auto p-4">
-            <Button
-              onClick={handleLogout}
-              disabled={isLoading}
-              variant="outline"
-              className={isCollapsed ? 'w-full px-0' : 'w-full'}
-            >
-              {isCollapsed ? 'Logout' : isLoading ? 'Logging out...' : 'Logout'}
-            </Button>
+            <div className={isCollapsed ? 'space-y-2' : 'flex gap-2'}>
+              <ThemeToggle />
+              <Button
+                onClick={handleLogout}
+                disabled={isLoading}
+                variant="outline"
+                className={isCollapsed ? 'w-[120px] px-0' : 'w-[120px]'}
+              >
+                {isCollapsed ? 'Logout' : isLoading ? 'Logging out...' : 'Logout'}
+              </Button>
+            </div>
           </div>
         </aside>
 
         <main className="flex-1 overflow-auto">
-          <div className="md:hidden sticky top-0 z-40 border-b bg-white">
+          <div className="md:hidden sticky top-0 z-40 border-b bg-card">
             <div className="h-14 px-4 flex items-center gap-3">
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="Open menu">
@@ -252,6 +259,7 @@ export default function AdminLayout({
                 <div className="font-semibold truncate">Admin Dashboard</div>
                 <div className="text-xs text-gray-500 truncate">DiscipleHub</div>
               </div>
+              <ThemeToggle />
             </div>
           </div>
 

@@ -23,6 +23,10 @@ interface PendingSubmission {
   memberEmail: string;
 }
 
+interface OrganizationInfo {
+  wordOfTheDay: string | null;
+}
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0,
@@ -33,11 +37,12 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
   const [pendingRecent, setPendingRecent] = useState<PendingSubmission[]>([]);
+  const [organization, setOrganization] = useState<OrganizationInfo | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [usersRes, tasksRes, quizzesRes, pendingRes] = await Promise.all([
+        const [usersRes, tasksRes, quizzesRes, pendingRes, orgRes] = await Promise.all([
           axios.get('/api/users', { withCredentials: true }),
           axios.get('/api/tasks', { withCredentials: true }),
           axios.get('/api/quizzes', { withCredentials: true }),
@@ -46,6 +51,7 @@ export default function AdminDashboard() {
               withCredentials: true,
             })
             .catch(() => null),
+          axios.get('/api/organization', { withCredentials: true }).catch(() => null),
         ]);
 
         setStats({
@@ -57,6 +63,9 @@ export default function AdminDashboard() {
         if (pendingRes?.data?.data) {
           setPendingCount(pendingRes.data.data.count ?? 0);
           setPendingRecent(pendingRes.data.data.recent ?? []);
+        }
+        if (orgRes?.data?.data?.organization) {
+          setOrganization({ wordOfTheDay: orgRes.data.data.organization.wordOfTheDay ?? null });
         }
       } catch (error) {
         console.error('Failed to fetch stats:', error);
@@ -74,6 +83,17 @@ export default function AdminDashboard() {
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-gray-600 mt-2">Welcome to the discipleship platform admin panel</p>
       </div>
+
+      {!isLoading && organization?.wordOfTheDay ? (
+        <div className="rounded-lg border border-accent bg-accent/20 p-4 md:p-5">
+          <div className="text-xs uppercase tracking-wide text-primary font-semibold">
+            Word for the Day
+          </div>
+          <p className="mt-2 text-sm text-foreground whitespace-pre-wrap">
+            {organization.wordOfTheDay}
+          </p>
+        </div>
+      ) : null}
 
       {!isLoading && pendingCount > 0 ? (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 md:p-5">

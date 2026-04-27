@@ -173,7 +173,7 @@ export default function UserLeaderboardPage() {
               {leaderboard.map((user) => (
                 <div
                   key={user.userId}
-                  className="flex items-center justify-between p-4 rounded border hover:bg-gray-50"
+                  className="flex items-center justify-between p-4 rounded border"
                 >
                   <div className="flex items-center gap-4 flex-1">
                     <div className="text-2xl font-bold text-blue-600 w-12 text-center">

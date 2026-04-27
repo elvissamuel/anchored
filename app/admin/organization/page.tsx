@@ -19,6 +19,7 @@ type OrgInfo = {
   id: string;
   name: string;
   slug: string;
+  wordOfTheDay: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -28,8 +29,10 @@ export default function AdminOrganizationPage() {
   const [invite, setInvite] = useState<InviteInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [isSavingWord, setIsSavingWord] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [wordOfTheDay, setWordOfTheDay] = useState('');
 
   const orgCode = useMemo(() => invite?.token || '', [invite]);
   const inviteLink = useMemo(() => invite?.link || '', [invite]);
@@ -40,11 +43,33 @@ export default function AdminOrganizationPage() {
     try {
       const res = await axios.get('/api/organization', { withCredentials: true });
       setOrg(res.data.data.organization);
+      setWordOfTheDay(res.data.data.organization?.wordOfTheDay || '');
       setInvite(res.data.data.invite);
     } catch (e: any) {
       setError(e.response?.data?.error || 'Failed to load organization profile');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const saveWordOfTheDay = async () => {
+    setIsSavingWord(true);
+    setError('');
+    setSuccess('');
+    try {
+      const res = await axios.patch(
+        '/api/organization',
+        { wordOfTheDay },
+        { withCredentials: true }
+      );
+      setOrg(res.data.data.organization);
+      setWordOfTheDay(res.data.data.organization?.wordOfTheDay || '');
+      setSuccess('Word for the day updated');
+      setTimeout(() => setSuccess(''), 2000);
+    } catch (e: any) {
+      setError(e.response?.data?.error || 'Failed to update word for the day');
+    } finally {
+      setIsSavingWord(false);
     }
   };
 
@@ -114,6 +139,27 @@ export default function AdminOrganizationPage() {
               <div className="font-medium">{org?.slug || '-'}</div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Word for the Day</CardTitle>
+          <CardDescription>
+            This appears on both admin and member dashboards.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Input
+            value={wordOfTheDay}
+            onChange={(e) => setWordOfTheDay(e.target.value)}
+            placeholder="Enter today's encouragement, verse, or focus word..."
+            maxLength={500}
+          />
+          <div className="text-xs text-gray-500">{wordOfTheDay.length}/500</div>
+          <Button onClick={saveWordOfTheDay} disabled={isSavingWord}>
+            {isSavingWord ? 'Saving...' : 'Save word for the day'}
+          </Button>
         </CardContent>
       </Card>
 

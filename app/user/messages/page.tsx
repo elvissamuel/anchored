@@ -155,7 +155,7 @@ export default function UserMessagesPage() {
                     </div>
 
                     {expandedId === notif.id && (
-                      <div className="mt-4 p-4 bg-white rounded border text-sm text-gray-700">
+                      <div className="mt-4 p-4 bg-card rounded border text-sm text-gray-700">
                         {notif.message}
                       </div>
                     )}
@@ -203,7 +203,7 @@ export default function UserMessagesPage() {
                       )}
                     </div>
                     {expandedId === msg.id && (
-                      <div className="mt-4 p-4 bg-white rounded border text-sm text-gray-700">
+                      <div className="mt-4 p-4 bg-card rounded border text-sm text-gray-700">
                         {msg.message}
                       </div>
                     )}
@@ -254,7 +254,7 @@ export default function UserMessagesPage() {
                       )}
                     </div>
                     {expandedId === ann.id && (
-                      <div className="mt-4 p-4 bg-white rounded border text-sm text-gray-700">
+                      <div className="mt-4 p-4 bg-card rounded border text-sm text-gray-700">
                         {ann.message}
                       </div>
                     )}
