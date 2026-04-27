@@ -105,23 +105,29 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const announcements = await prisma.notification.findMany({
-      where: {
-        userId,
-        organizationId,
-        isAnnouncement: true,
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 2,
-      select: {
-        id: true,
-        title: true,
-        message: true,
-        type: true,
-        createdAt: true,
-        read: true,
-      },
-    });
+    const [announcements, organization] = await Promise.all([
+      prisma.notification.findMany({
+        where: {
+          userId,
+          organizationId,
+          isAnnouncement: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 2,
+        select: {
+          id: true,
+          title: true,
+          message: true,
+          type: true,
+          createdAt: true,
+          read: true,
+        },
+      }),
+      prisma.organization.findUnique({
+        where: { id: organizationId },
+        select: { wordOfTheDay: true },
+      }),
+    ]);
 
     return NextResponse.json(
       successResponse({
@@ -136,6 +142,7 @@ export async function GET(request: NextRequest) {
         },
         pendingTasks: tasks,
         announcements,
+        wordOfTheDay: organization?.wordOfTheDay || null,
       }),
       { status: HTTP_STATUS.OK }
     );

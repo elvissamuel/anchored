@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
         id: true,
         name: true,
         slug: true,
+        wordOfTheDay: true,
         createdAt: true,
         updatedAt: true,
         inviteLinks: {
@@ -55,6 +56,7 @@ export async function GET(request: NextRequest) {
           id: organization.id,
           name: organization.name,
           slug: organization.slug,
+          wordOfTheDay: organization.wordOfTheDay,
           createdAt: organization.createdAt,
           updatedAt: organization.updatedAt,
         },
@@ -71,6 +73,50 @@ export async function GET(request: NextRequest) {
     console.error('[Organization GET Error]', error);
     return NextResponse.json(
       errorResponse('Failed to fetch organization'),
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const token = request.cookies.get('session')?.value;
+    const session = token ? await verifySession(token) : null;
+
+    if (!session?.organizationId || session.orgRole !== 'ADMIN') {
+      return NextResponse.json(
+        errorResponse('Unauthorized'),
+        { status: HTTP_STATUS.FORBIDDEN }
+      );
+    }
+
+    const body = await request.json();
+    const raw = typeof body?.wordOfTheDay === 'string' ? body.wordOfTheDay.trim() : '';
+    const wordOfTheDay = raw.length > 0 ? raw.slice(0, 500) : null;
+
+    const organization = await prisma.organization.update({
+      where: { id: session.organizationId },
+      data: { wordOfTheDay },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        wordOfTheDay: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return NextResponse.json(
+      successResponse({ organization }, 'Word for the day updated'),
+      { status: HTTP_STATUS.OK }
+    );
+  } catch (error) {
+    console.error('[Organization PATCH Error]', error);
+    return NextResponse.json(
+      errorResponse('Failed to update organization'),
       { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   } finally {

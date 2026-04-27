@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { ThemeToggle } from '@/components/theme-toggle';
 import {
   BookOpenIcon,
   LayoutDashboardIcon,
@@ -39,7 +40,7 @@ export default function UserLayout({
           variant={isActiveExact('/user') ? 'secondary' : 'ghost'}
           className={
             isActiveExact('/user')
-              ? 'w-full justify-start text-left bg-gray-100'
+              ? 'w-full justify-start text-left !text-primary bg-secondary/30 hover:bg-secondary/50 dark:bg-secondary/60 dark:hover:bg-secondary/80 [&_svg]:!text-primary'
               : 'w-full justify-start text-left'
           }
         >
@@ -53,7 +54,7 @@ export default function UserLayout({
           variant={isActivePrefix('/user/tasks') ? 'secondary' : 'ghost'}
           className={
             isActivePrefix('/user/tasks')
-              ? 'w-full justify-start text-left bg-gray-100'
+              ? 'w-full justify-start text-left !text-primary bg-secondary/30 hover:bg-secondary/50 dark:bg-secondary/60 dark:hover:bg-secondary/80 [&_svg]:!text-primary'
               : 'w-full justify-start text-left'
           }
         >
@@ -67,7 +68,7 @@ export default function UserLayout({
           variant={isActivePrefix('/user/quizzes') ? 'secondary' : 'ghost'}
           className={
             isActivePrefix('/user/quizzes')
-              ? 'w-full justify-start text-left bg-gray-100'
+              ? 'w-full justify-start text-left !text-primary bg-secondary/30 hover:bg-secondary/50 dark:bg-secondary/60 dark:hover:bg-secondary/80 [&_svg]:!text-primary'
               : 'w-full justify-start text-left'
           }
         >
@@ -81,7 +82,7 @@ export default function UserLayout({
           variant={isActivePrefix('/user/games') ? 'secondary' : 'ghost'}
           className={
             isActivePrefix('/user/games')
-              ? 'w-full justify-start text-left bg-gray-100'
+              ? 'w-full justify-start text-left !text-primary bg-secondary/30 hover:bg-secondary/50 dark:bg-secondary/60 dark:hover:bg-secondary/80 [&_svg]:!text-primary'
               : 'w-full justify-start text-left'
           }
         >
@@ -95,7 +96,7 @@ export default function UserLayout({
           variant={isActivePrefix('/user/leaderboard') ? 'secondary' : 'ghost'}
           className={
             isActivePrefix('/user/leaderboard')
-              ? 'w-full justify-start text-left bg-gray-100'
+              ? 'w-full justify-start text-left !text-primary bg-secondary/30 hover:bg-secondary/50 dark:bg-secondary/60 dark:hover:bg-secondary/80 [&_svg]:!text-primary'
               : 'w-full justify-start text-left'
           }
         >
@@ -109,7 +110,7 @@ export default function UserLayout({
           variant={isActivePrefix('/user/messages') ? 'secondary' : 'ghost'}
           className={
             isActivePrefix('/user/messages')
-              ? 'w-full justify-start text-left bg-gray-100'
+              ? 'w-full justify-start text-left !text-primary bg-secondary/30 hover:bg-secondary/50 dark:bg-secondary/60 dark:hover:bg-secondary/80 [&_svg]:!text-primary'
               : 'w-full justify-start text-left'
           }
         >
@@ -147,11 +148,11 @@ export default function UserLayout({
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-background">
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="p-0">
           <div className="p-6 border-b">
-            <h1 className="text-xl font-bold text-blue-600">Anchored</h1>
+            <h1 className="text-xl font-bold text-primary">Anchored</h1>
             <p className="text-xs text-gray-500 mt-1">
               {organizationName ? organizationName : 'Disciple Dashboard'}
             </p>
@@ -160,25 +161,28 @@ export default function UserLayout({
             <Nav onNavigate={() => setMobileOpen(false)} />
           </div>
           <div className="mt-auto p-4 border-t">
-            <Button
-              onClick={handleLogout}
-              disabled={isLoading}
-              variant="outline"
-              className="w-full"
-            >
-              {isLoading ? 'Logging out...' : 'Logout'}
-            </Button>
+            <div className="flex gap-2">
+              <ThemeToggle />
+              <Button
+                onClick={handleLogout}
+                disabled={isLoading}
+                variant="outline"
+                className="w-full"
+              >
+                {isLoading ? 'Logging out...' : 'Logout'}
+              </Button>
+            </div>
           </div>
         </SheetContent>
 
         {/* Desktop sidebar */}
         <aside
-          className={`${isCollapsed ? 'w-20' : 'w-64'} hidden md:flex flex-col bg-white shadow-sm border-r transition-[width] duration-200`}
+          className={`${isCollapsed ? 'w-20' : 'w-64'} hidden md:flex flex-col bg-card shadow-sm border-r transition-[width] duration-200`}
         >
           <div className="p-6">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <h1 className="text-2xl font-bold text-blue-600">{isCollapsed ? 'A' : 'Anchored'}</h1>
+                <h1 className="text-2xl font-bold text-primary">{isCollapsed ? 'A' : 'Anchored'}</h1>
                 {!isCollapsed && (
                   <p className="text-xs text-gray-500 mt-1">
                     {organizationName ? organizationName : 'Disciple Dashboard'}
@@ -206,20 +210,23 @@ export default function UserLayout({
           </div>
 
           <div className="mt-auto p-4">
-            <Button
-              onClick={handleLogout}
-              disabled={isLoading}
-              variant="outline"
-              className={isCollapsed ? 'w-full px-0' : 'w-full'}
-            >
-              {isCollapsed ? 'Logout' : isLoading ? 'Logging out...' : 'Logout'}
-            </Button>
+            <div className={isCollapsed ? 'space-y-2' : 'flex gap-2'}>
+              <ThemeToggle />
+              <Button
+                onClick={handleLogout}
+                disabled={isLoading}
+                variant="outline"
+                className={isCollapsed ? 'w-[120px] px-0' : 'w-[120px]'}
+              >
+                {isCollapsed ? 'Logout' : isLoading ? 'Logging out...' : 'Logout'}
+              </Button>
+            </div>
           </div>
         </aside>
 
         {/* Main content */}
         <main className="flex-1 overflow-auto">
-          <div className="md:hidden sticky top-0 z-40 border-b bg-white">
+          <div className="md:hidden sticky top-0 z-40 border-b bg-card">
             <div className="h-14 px-4 flex items-center gap-3">
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="Open menu">
@@ -232,6 +239,7 @@ export default function UserLayout({
                   {organizationName ? organizationName : 'Disciple Dashboard'}
                 </div>
               </div>
+              <ThemeToggle />
             </div>
           </div>
 

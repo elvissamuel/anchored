@@ -90,7 +90,7 @@ export default function UserTasksPage() {
               const submissionState = task.completions[0]?.submittedAt ? 'Submitted' : 'Pending';
               return (
                 <Link key={task.id} href={`/user/tasks/${task.id}`} className="block">
-                  <Card className="hover:bg-gray-50 transition">
+                  <Card>
                     <CardContent className="py-4">
                       <div className="flex items-center gap-4">
                         <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">
@@ -141,7 +141,7 @@ export default function UserTasksPage() {
               const Icon = meta.icon;
               return (
                 <Link key={task.id} href={`/user/tasks/${task.id}`} className="block">
-                  <Card className="hover:bg-gray-50 transition">
+                  <Card>
                     <CardContent className="py-4">
                       <div className="flex items-center gap-4">
                         <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">

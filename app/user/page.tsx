@@ -42,6 +42,7 @@ type DashboardData = {
   };
   pendingTasks: DashboardTask[];
   announcements: DashboardAnnouncement[];
+  wordOfTheDay: string | null;
 };
 
 export default function UserDashboard() {
@@ -104,6 +105,19 @@ export default function UserDashboard() {
         <h1 className="text-3xl font-bold">{data?.user.fullName || 'Disciple'}</h1>
         <p className="text-gray-600 mt-2">Keep growing in faith — one step at a time.</p>
       </div>
+
+      {!isLoading && data?.wordOfTheDay ? (
+        <Card className="border-accent bg-accent/20">
+          <CardContent className="pt-6">
+            <div className="text-xs uppercase tracking-wide text-primary font-semibold">
+              Word for the Day
+            </div>
+            <p className="mt-2 text-sm text-foreground whitespace-pre-wrap">
+              {data.wordOfTheDay}
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {isLoading ? (
         <div className="text-center py-8 text-gray-500">Loading your dashboard...</div>
@@ -170,7 +184,7 @@ export default function UserDashboard() {
               </Link>
             </div>
 
-            <div className="rounded-xl border bg-white overflow-hidden">
+            <div className="rounded-xl border bg-card overflow-hidden">
               {data.pendingTasks.length === 0 ? (
                 <div className="p-4 text-sm text-gray-500">No pending tasks.</div>
               ) : (
@@ -218,7 +232,7 @@ export default function UserDashboard() {
               </Link>
             </div>
 
-            <div className="rounded-xl border bg-white overflow-hidden">
+            <div className="rounded-xl border bg-card overflow-hidden">
               {data.announcements.length === 0 ? (
                 <div className="p-4 text-sm text-gray-500">No announcements.</div>
               ) : (
@@ -227,7 +241,7 @@ export default function UserDashboard() {
                     <Link
                       key={a.id}
                       href="/user/messages"
-                      className="block p-4 hover:bg-gray-50 transition"
+                      className="block p-4 transition"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-start gap-3 min-w-0">
